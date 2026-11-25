@@ -1,0 +1,40 @@
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  application:
+    name: ${SERVICE_NAME:template-service}
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/shoplab}
+    username: ${POSTGRES_USER:shoplab}
+    password: ${POSTGRES_PASSWORD:change-me-local-only}
+  # One schema per service (ADR-0015), with its own history table.
+  flyway:
+    schemas: ${SERVICE_SCHEMA:template}
+    default-schema: ${SERVICE_SCHEMA:template}
+    locations: classpath:db/migration/${SERVICE_SCHEMA:template}
+  reactor:
+    context-propagation: auto
+
+# No authentication until there is a login (LAB-61).
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,db
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  structured:
+    format:
+      console: logstash
